@@ -1,0 +1,8 @@
+sequenceDiagram
+    participant Browser
+    participant Server
+    Note over Browser,Server: Notes list gets re-rendered with the newly added note
+    Browser->>Server: POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+    Server->>Browser:  Status 201: "Note Created"
+
+    
