@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import Note from './components/Note.jsx'
@@ -6,11 +7,25 @@ import Note from './components/Note.jsx'
 
 
 const App = (props) => {
-  const [notes, setNotes] = useState(props.notes)
+  const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState(
     'a new note...'
   )
   const [showAll, setShowAll] = useState(true)
+
+  const hook = () => {
+    console.log('Effect')
+    axios
+      .get('http://localhost:3001/notes')
+      .then(response => {
+        console.log('Promise Done')
+        setNotes(response.data)
+      })
+  }
+
+  useEffect(hook, [])
+
+  console.log('render', notes.length, 'notes')
 
   const addNote = (event) => {
     event.preventDefault()

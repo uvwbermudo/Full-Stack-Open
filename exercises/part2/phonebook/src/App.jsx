@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 
 const Persons = (props) => {
@@ -29,17 +30,23 @@ const PersonForm = (props) => {
 }
 
 const App = () => {
-  const [records, setRecords] = useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ]) 
-
+  const [records, setRecords] = useState([]) 
   const [searchFilter, setSearchFilter] = useState('')
   const handleSearch = (event) => setSearchFilter(event.target.value)
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
+
+  const hook = () => {
+    console.log('Effect')
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        console.log('Promise Done!')
+        setRecords(response.data)
+      })
+  }
+
+  useEffect(hook, [])
 
   const recordsToShow = !searchFilter.trim()
   ? records
@@ -58,8 +65,18 @@ const App = () => {
 
   const handleAddName = (event) => {
     event.preventDefault()
-    const nameToAdd = toTitleCase(newName.trim())
+    let nameToAdd = newName.trim()
     const numberToAdd = newNumber.trim()
+    if (nameToAdd == ''){
+      alert('Name is required!')
+      return
+    }
+
+    if (numberToAdd == '') {
+      alert('Number is required!')
+      return
+    }
+    nameToAdd = toTitleCase(nameToAdd)
     const nameExists = records.filter(record => record.name === nameToAdd)
     const numberExists = records.filter(record => record.number === numberToAdd)
     if (nameExists.length > 0) {
