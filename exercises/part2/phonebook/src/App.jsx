@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import phonebookService from './services/phonebook'
 
 
 const Persons = (props) => {
-  const {persons} = props
+  const {persons, handleDelete} = props
   return (
     <>
-      {persons.map(record => <div key={record.name}>{record.name} {record.number}</div>)}
+      {persons.map(record => 
+        <div key={record.name}>
+          {record.name} {record.number}
+          <button onClick={() => handleDelete(event, record.id)}>Delete</button>
+        </div>
+      )}
     </>
   )
 }
@@ -37,13 +43,10 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
 
   const hook = () => {
-    console.log('Effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('Promise Done!')
-        setRecords(response.data)
-      })
+    phonebookService.getAll()
+    .then(initialRecords => {
+      setRecords(initialRecords)
+    })
   }
 
   useEffect(hook, [])
@@ -77,21 +80,51 @@ const App = () => {
       return
     }
     nameToAdd = toTitleCase(nameToAdd)
-    const nameExists = records.filter(record => record.name === nameToAdd)
-    const numberExists = records.filter(record => record.number === numberToAdd)
-    if (nameExists.length > 0) {
-      alert(`${nameToAdd} is already added in the phonebook!`)
+    const nameExists = records.find(record => record.name === nameToAdd)
+    const numberExists = records.find(record => record.number === numberToAdd)
+    // handle existing name and update
+    if (nameExists) {
+      if (numberExists && numberExists.name !== nameExists.name) {
+        alert (`${numberToAdd} is already being used by ${numberExists.name}`)
+        return
+      }
+      if (window.confirm(`${nameExists.name} is already in the phonebook, replace the old number with the new one?`)){
+        updateRecord(nameExists, numberToAdd)
+      }
       return
     }
-    if (numberExists.length > 0) {
-      alert (`${numberToAdd} is already being used by ${numberExists[0].name}`)
+
+    if (numberExists) {
+      alert (`${numberToAdd} is already being used by ${numberExists.name}`)
       return
     }
     const newRecord = {
       name: nameToAdd,
       number: numberToAdd
     }
-    setRecords(records.concat(newRecord))
+    phonebookService.create(newRecord)
+    .then(returnedRecord => {
+      setRecords(records.concat(returnedRecord))
+    })
+  }
+
+  const handleDelete = (event, id) => {
+    const recordToDelete = records.find(record => record.id === id)
+    if (window.confirm(`Delete ${recordToDelete.name}?`)) {
+      phonebookService.deleteRecord(id)
+      .then(returnedRecord => {
+        setRecords(records.filter(record => record.id !== returnedRecord.id))
+      })
+    }
+  }
+
+  const updateRecord = (existingObject, newNumber) => {
+    const updateRecordObject = {...existingObject, number: newNumber}
+    phonebookService
+      .update(existingObject.id, updateRecordObject)
+      .then(returnedRecord => {
+        setRecords(records.map(record => record.id === existingObject.id ? returnedRecord : record))
+      })
   }
 
   return (
@@ -107,7 +140,7 @@ const App = () => {
         newNumber={newNumber}
       ></PersonForm>
       <h2>Numbers</h2>
-      <Persons persons={recordsToShow}></Persons>
+      <Persons persons={recordsToShow} handleDelete={handleDelete}></Persons>
     </div>
   )
 }
