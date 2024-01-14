@@ -1,16 +1,39 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import phonebookService from './services/phonebook'
+import './index.css'
 
+
+const Notification = (props) => {
+  const {messageObject} = props
+
+  if (!messageObject) {
+    return null
+  }
+  
+  if (messageObject.type === 'success'){
+    return (
+      <div className='success'>{messageObject.message}</div>
+    )
+  } else if (messageObject.type === 'error') {
+    return (
+      <div className='error'>{messageObject.message}</div>
+    )
+  }
+}
 
 const Persons = (props) => {
   const {persons, handleDelete} = props
+  const buttonStyle = {
+    marginLeft: 5,
+  }
+
   return (
     <>
       {persons.map(record => 
         <div key={record.name}>
           {record.name} {record.number}
-          <button onClick={() => handleDelete(event, record.id)}>Delete</button>
+          <button style={buttonStyle} onClick={() => handleDelete(event, record.id)}>Delete</button>
         </div>
       )}
     </>
@@ -41,6 +64,7 @@ const App = () => {
   const handleSearch = (event) => setSearchFilter(event.target.value)
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
+  const [messageObject, setMessageObject] = useState(null)
 
   const hook = () => {
     phonebookService.getAll()
@@ -66,17 +90,31 @@ const App = () => {
 
   const handleNewNumberChange = (event) => setNewNumber(event.target.value)
 
+  const notifyUser = (message, type) => {
+    if (!message || !type){
+      return
+    }
+    setMessageObject({
+      message: message,
+      type: type
+    })
+    setTimeout(() => {
+      setMessageObject(null)
+    }, 5000)
+  
+  }
+
   const handleAddName = (event) => {
     event.preventDefault()
     let nameToAdd = newName.trim()
     const numberToAdd = newNumber.trim()
     if (nameToAdd == ''){
-      alert('Name is required!')
+      notifyUser('Could not add, name is required!', 'error')
       return
     }
 
     if (numberToAdd == '') {
-      alert('Number is required!')
+      notifyUser('Could not add, number is required!', 'error')
       return
     }
     nameToAdd = toTitleCase(nameToAdd)
@@ -85,7 +123,7 @@ const App = () => {
     // handle existing name and update
     if (nameExists) {
       if (numberExists && numberExists.name !== nameExists.name) {
-        alert (`${numberToAdd} is already being used by ${numberExists.name}`)
+        notifyUser(`Could not update, ${numberToAdd} is already being used by ${numberExists.name}`, 'error')
         return
       }
       if (window.confirm(`${nameExists.name} is already in the phonebook, replace the old number with the new one?`)){
@@ -95,17 +133,20 @@ const App = () => {
     }
 
     if (numberExists) {
-      alert (`${numberToAdd} is already being used by ${numberExists.name}`)
+      notifyUser(`${numberToAdd} is already being used by ${numberExists.name}`, 'error')
       return
     }
     const newRecord = {
       name: nameToAdd,
       number: numberToAdd
     }
-    phonebookService.create(newRecord)
-    .then(returnedRecord => {
-      setRecords(records.concat(returnedRecord))
-    })
+    phonebookService
+      .create(newRecord)
+      .then(returnedRecord => {
+        setRecords(records.concat(returnedRecord))
+        const newMessage = `Added ${returnedRecord.name}`
+        notifyUser(newMessage, 'success')
+      })
   }
 
   const handleDelete = (event, id) => {
@@ -114,6 +155,15 @@ const App = () => {
       phonebookService.deleteRecord(id)
       .then(returnedRecord => {
         setRecords(records.filter(record => record.id !== returnedRecord.id))
+        const newMessage = `Deleted ${returnedRecord.name}`
+        notifyUser(newMessage, 'success')
+      })
+      .catch(err => {
+        if (err.response.status === 404){
+          setRecords(records.filter(record => record.id !== recordToDelete.id))
+          const newMessage = `Information of ${recordToDelete.name} has already been removed from the server`
+          notifyUser(newMessage, 'error')
+        }
       })
     }
   }
@@ -124,12 +174,22 @@ const App = () => {
       .update(existingObject.id, updateRecordObject)
       .then(returnedRecord => {
         setRecords(records.map(record => record.id === existingObject.id ? returnedRecord : record))
+        const newMessage = `Updated ${returnedRecord.name}`
+        notifyUser(newMessage, 'success')
+      })
+      .catch(err => {
+        if (err.response.status === 404){
+          setRecords(records.filter(record => record.id !== updateRecordObject.id))
+          const newMessage = `Information of ${updateRecordObject.name} has already been removed from the server`
+          notifyUser(newMessage, 'error')
+        }
       })
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification messageObject={messageObject}></Notification>
       <Filter handleSearch={handleSearch}></Filter>
       <h2>Add a new record</h2>
       <PersonForm 

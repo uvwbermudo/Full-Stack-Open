@@ -4,18 +4,44 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import Note from './components/Note.jsx'
 import noteService from './services/notes'
+import './index.css'
 
+const Notification = ({message}) => {
+  if (message === null) {
+    return null
+  }
+  return (
+    <div className="error">
+      {message}
+    </div>
+  )
+}
+
+const Footer = () => {
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: '16'
+  }
+
+  return (
+    <div style={footerStyle}>
+      <br />
+      <em>Note app, Department of Computer Science, University of Helsinki 2023</em>
+      <div>Made by UVWB, Full Stack Open Student</div>
+    </div>
+  )
+  
+}
 
 
 const App = (props) => {
   const [notes, setNotes] = useState([])
-  const [newNote, setNewNote] = useState(
-    'a new note...'
-  )
+  const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   const hook = () => {
-    console.log('Effect')
     noteService
       .getAll()
       .then(initialNotes => {
@@ -23,8 +49,6 @@ const App = (props) => {
       })
   }
   useEffect(hook, [])
-
-  console.log('render', notes.length, 'notes')
 
   const addNote = (event) => {
     event.preventDefault()
@@ -54,7 +78,12 @@ const App = (props) => {
         setNotes(notes.map(note => note.id !== id ? note : returnedNote))
       })
       .catch(error => {
-        alert(`The note '${note.content}' was already deleted from the server`)
+        setErrorMessage(
+          `Note '${note.content}' was already deleted from the server`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
         setNotes(notes.filter(note => note.id !== id))
       })
 
@@ -67,6 +96,7 @@ const App = (props) => {
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage}></Notification>
       <div>
         <button onClick={() => setShowAll(!showAll)}>
           Show {showAll ? 'Important' : 'All'}
@@ -86,6 +116,7 @@ const App = (props) => {
         <input value={newNote} onChange={handleNoteChange}/>
         <button type='submit'>Save</button>
       </form>
+      <Footer></Footer>
     </div>
   )
 }
