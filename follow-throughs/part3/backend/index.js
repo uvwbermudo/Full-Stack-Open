@@ -64,15 +64,20 @@ app.delete('/api/notes/:id', (request, response) =>{
 })
 
 const generateID = () => {
-  const maxID = notes.length > 0
-  ? Math.max(...notes.map(n => n.id))
-  : 0 
+  let newID = null
+  let IDExists = true
+  const noteIDs = notes.map(note => note.id)
 
-  return maxID + 1
+  while (IDExists){
+    newID = Math.floor(Math.random() * 10000) + 1
+    IDExists = noteIDs.find(id => id === newID)
+  }
+  return newID
 }
 
 app.post('/api/notes', (request, response) =>{
   const body = request.body
+  console.log(body)
 
   if (!body.content) {
     return response.status(400).json({

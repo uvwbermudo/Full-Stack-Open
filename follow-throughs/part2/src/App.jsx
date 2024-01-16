@@ -58,13 +58,12 @@ const App = (props) => {
     }
     noteService.create(noteObject)
       .then(response => {
-        setNotes(notes.concat(response.data))
+        setNotes(notes.concat(response))
         setNewNote('')
       })
   }
 
   const handleNoteChange = (event) => {
-    console.log(event.target.value)
     setNewNote(event.target.value)
   }
 
@@ -103,13 +102,15 @@ const App = (props) => {
         </button>
       </div>
       <ul>
-        {notesToShow.map(note => 
-          <Note 
+        {notesToShow.map(note => {
+          return (
+            <Note 
             key={note.id} 
             note={note}
             toggleImportanceOf = {() => toggleImportanceOf(note.id)}
             />
-
+          )
+        }
         )}
       </ul>
       <form onSubmit={addNote}>
