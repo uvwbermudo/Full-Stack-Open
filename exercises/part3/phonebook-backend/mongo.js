@@ -1,3 +1,4 @@
+require('dotenv').config
 const mongoose = require('mongoose')
 
 
@@ -25,7 +26,7 @@ const phonebookRecord = new mongoose.model('Phonebook Record', phonebookSchema)
 if (process.argv.length === 3) {
   phonebookRecord.find({})
     .then(result => {
-      consol.log('Phonebook records: ')
+      console.log('Phonebook records: ')
       result.forEach(record => {
         console.log(record.name, record.number)
       })
