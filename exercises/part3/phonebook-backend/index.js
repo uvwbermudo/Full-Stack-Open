@@ -7,20 +7,20 @@ const Phonebook = require('./models/phonebook')
 const PORT = process.env.PORT
 
 app.use(express.json())
-morgan.token('data', (request, response) => {return JSON.stringify(request.body)})
+morgan.token('data', (request) => {return JSON.stringify(request.body)})
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :data'))
 app.use(cors())
 app.use(express.static('dist'))
 
 function getTimezoneOffset() {
   function z(n){return (n<10? '0' : '') + n}
-  var offset = new Date().getTimezoneOffset();
-  var sign = offset < 0? '+' : '-';
-  offset = Math.abs(offset);
-  return sign + z(offset/60 | 0) + z(offset%60);
+  var offset = new Date().getTimezoneOffset()
+  var sign = offset < 0? '+' : '-'
+  offset = Math.abs(offset)
+  return sign + z(offset/60 | 0) + z(offset%60)
 }
 
-app.get('/', (request,response, next) => {
+app.get('/', (request,response) => {
   response.send('<h1>Hello World!</h1>')
 })
 
@@ -44,7 +44,7 @@ app.get('/api/persons/:id', (request,response, next) => {
 
 app.delete('/api/persons/:id', (request,response, next) => {
   Phonebook.findByIdAndDelete(request.params.id)
-    .then(result => response.status(204).end())
+    .then(() => response.status(204).end())
     .catch(error => next(error))
 })
 
@@ -64,16 +64,19 @@ app.post('/api/persons', (request,response, next) => {
 
 })
 
-app.get('/info', (request,response, next) => {
+app.get('/info', (request,response) => {
   const currentDate = new Date()
-  const currentTime = currentDate.toLocaleString([], {hour12:false}).split(',')[1]
-  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const currentTime = currentDate.toLocaleString([], { hour12:false }).split(',')[1]
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const gmtOffset = getTimezoneOffset()
-  response.send(`
-    <div>Phonebook has info for ${persons.length} people</div>
-    <br/>
-    <div>${currentDate.toDateString()} ${currentTime} GMT ${gmtOffset} (${browserTimezone}) </div>
-  `)
+  Phonebook.countDocuments({}).then(result => {
+    response.send(`
+      <div>Phonebook has info for ${result} people</div>
+      <br/>
+      <div>${currentDate.toDateString()} ${currentTime} GMT ${gmtOffset} (${browserTimezone}) </div>
+    `)
+  })
+
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -84,7 +87,7 @@ app.put('/api/persons/:id', (request, response, next) => {
     name: body.name
   }
 
-  Phonebook.findByIdAndUpdate(request.params.id, person, {new:true, runValidators:true, content:'query'})
+  Phonebook.findByIdAndUpdate(request.params.id, person, { new:true, runValidators:true, content:'query' })
     .then(updatedNote => response.json(updatedNote))
     .catch(error => next(error))
 })
@@ -93,16 +96,16 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError'){
-    return response.status(400).send({error: 'malformatted id'})
+    return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
-    return response.status(400).send({error: error.message})
+    return response.status(400).send({ error: error.message })
   }
 
   next(error)
 }
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).json({error:'unknown endpoint'})
+  response.status(404).json({ error:'unknown endpoint' })
 }
 
 

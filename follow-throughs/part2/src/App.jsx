@@ -61,10 +61,20 @@ const App = (props) => {
         setNotes(notes.concat(response))
         setNewNote('')
       })
+      .catch(error => {
+        notifyError(error.response.data.error)
+      })
   }
 
   const handleNoteChange = (event) => {
     setNewNote(event.target.value)
+  }
+
+  const notifyError = (message) => {
+    setErrorMessage(message)
+    setTimeout(() => {
+      setErrorMessage(null)
+    }, 5000)
   }
 
   const toggleImportanceOf = (id) => {
@@ -77,13 +87,7 @@ const App = (props) => {
         setNotes(notes.map(note => note.id !== id ? note : returnedNote))
       })
       .catch(error => {
-        setErrorMessage(
-          `Note '${note.content}' was already deleted from the server`
-        )
-        setTimeout(() => {
-          setErrorMessage(null)
-        }, 5000)
-        setNotes(notes.filter(note => note.id !== id))
+          console.log(error)
       })
 
   }

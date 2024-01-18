@@ -23,7 +23,7 @@ app.get('/', (request,response) => {
   response.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/notes', (request, response, next) =>{
+app.get('/api/notes', (request, response, next) => {
   Note.find({})
     .then(notes => {
       response.json(notes)
@@ -31,7 +31,7 @@ app.get('/api/notes', (request, response, next) =>{
     .catch(error => next(error))
 })
 
-app.get('/api/notes/:id', (request, response, next) =>{
+app.get('/api/notes/:id', (request, response, next) => {
   Note.findById(request.params.id)
     .then(note => {
       if (note) {
@@ -43,13 +43,13 @@ app.get('/api/notes/:id', (request, response, next) =>{
     .catch(error => next(error))
 })
 
-app.delete('/api/notes/:id', (request, response, next) =>{
+app.delete('/api/notes/:id', (request, response, next) => {
   Note.findByIdAndDelete(request.params.id)
-    .then(result => response.status(204).end())
+    .then(() => response.status(204).end())
     .catch(error => next(error))
 })
 
-app.post('/api/notes', (request, response, next) =>{
+app.post('/api/notes', (request, response, next) => {
   const body = request.body
 
   const note = new Note ({
@@ -71,7 +71,7 @@ app.put('/api/notes/:id', (request, response, next) => {
     important: body.important
   }
 
-  Note.findByIdAndUpdate(request.params.id, note, {new:true, runValidators: true, content: 'query'})
+  Note.findByIdAndUpdate(request.params.id, note, { new:true, runValidators: true, content: 'query' })
     .then(updatedNote => {
       response.json(updatedNote)
     })
@@ -82,15 +82,15 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError'){
-    return response.status(400).send({error: 'malformatted id'})
+    return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError'){
-    return response.status(400).json({error : error.message})
+    return response.status(400).json({ error : error.message })
   }
   next(error)
 }
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).json({error:'unknown endpoint'})
+  response.status(404).json({ error:'unknown endpoint' })
 }
 
 
@@ -98,6 +98,6 @@ app.use(unknownEndpoint)
 app.use(errorHandler)
 
 const PORT = process.env.PORT
-app.listen(PORT, () =>{
+app.listen(PORT, () => {
   console.log(`SERVER IS RUNNING ON PORT ${PORT}`)
 })

@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 if (process.argv.length < 3){
   console.log('Please provide a password')
   process.exit(1)
-} 
+}
 
 const password = encodeURIComponent(process.argv[2])
 
@@ -19,17 +19,17 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note',noteSchema)
 
-const note = new Note({
-  content: 'Hello World!',
-  important: true,
-})
+// const note = new Note({
+//   content: 'Hello World!',
+//   important: true,
+// })
 
 // note.save().then(result => {
 //   console.log('Note saved!')
 //   mongoose.connection.close()
 // })
 
-Note.find({important:false}).then(result => {
+Note.find({ important:false }).then(result => {
   result.forEach(note => {
     console.log(note)
   })

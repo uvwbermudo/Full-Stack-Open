@@ -8,7 +8,7 @@ if (process.argv.length < 3) {
 } else if (process.argv.length === 4 || process.argv.length > 5) {
   console.log('To add a record use: node mongo.js <password> <name> <number>')
   process.exit(1)
-} 
+}
 
 const password = encodeURIComponent(process.argv[2])
 
