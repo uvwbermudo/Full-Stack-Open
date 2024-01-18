@@ -51,18 +51,6 @@ app.delete('/api/persons/:id', (request,response, next) => {
 app.post('/api/persons', (request,response, next) => {
   const body = request.body
 
-  if (!body.name) {
-    return response.status(400).json({
-      error: 'Name Missing'
-    })
-  }
-
-  if (!body.number) {
-    return response.status(400).json({
-      error: 'Number Missing'
-    })
-  }
-
   const person = new Phonebook({
     name: body.name,
     number: body.number
@@ -96,7 +84,7 @@ app.put('/api/persons/:id', (request, response, next) => {
     name: body.name
   }
 
-  Phonebook.findByIdAndUpdate(request.params.id, person, {new:true})
+  Phonebook.findByIdAndUpdate(request.params.id, person, {new:true, runValidators:true, content:'query'})
     .then(updatedNote => response.json(updatedNote))
     .catch(error => next(error))
 })
@@ -106,7 +94,10 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError'){
     return response.status(400).send({error: 'malformatted id'})
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).send({error: error.message})
   }
+
   next(error)
 }
 

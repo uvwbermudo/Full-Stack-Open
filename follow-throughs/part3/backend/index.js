@@ -52,9 +52,6 @@ app.delete('/api/notes/:id', (request, response, next) =>{
 app.post('/api/notes', (request, response, next) =>{
   const body = request.body
 
-  if (!body.content) {
-    return response.status(400).json({error: 'Content Missing'})
-  }
   const note = new Note ({
     content: body.content,
     important: Boolean(body.important) || false,
@@ -74,7 +71,7 @@ app.put('/api/notes/:id', (request, response, next) => {
     important: body.important
   }
 
-  Note.findByIdAndUpdate(request.params.id, note, {new:true})
+  Note.findByIdAndUpdate(request.params.id, note, {new:true, runValidators: true, content: 'query'})
     .then(updatedNote => {
       response.json(updatedNote)
     })
@@ -86,6 +83,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError'){
     return response.status(400).send({error: 'malformatted id'})
+  } else if (error.name === 'ValidationError'){
+    return response.status(400).json({error : error.message})
   }
   next(error)
 }

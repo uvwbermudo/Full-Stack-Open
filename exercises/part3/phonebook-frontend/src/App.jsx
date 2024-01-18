@@ -147,6 +147,12 @@ const App = () => {
         const newMessage = `Added ${returnedRecord.name}`
         notifyUser(newMessage, 'success')
       })
+      .catch(error => {
+        console.log(error)
+        const newMessage = error.response.data.error
+        console.log(newMessage)
+        notifyUser(newMessage, 'error')
+      })
   }
 
   const handleDelete = (event, id) => {
@@ -187,6 +193,9 @@ const App = () => {
         if (err.response.status === 404){
           setRecords(records.filter(record => record.id !== updateRecordObject.id))
           const newMessage = `Information of ${updateRecordObject.name} has already been removed from the server`
+          notifyUser(newMessage, 'error')
+        } else if (err.response.status === 400){
+          const newMessage = err.response.data.error
           notifyUser(newMessage, 'error')
         }
       })
