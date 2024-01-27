@@ -1,4 +1,6 @@
 const logger = require('./logger')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 const requestLogger = (request, response, next) => {
   logger.info('Method: ', request.method)
@@ -15,17 +17,43 @@ const unknownEndpoint = (request, response) => {
 const errorHandler = (error, request, response, next) => {
   logger.error(error.message)
   console.log(error.message)
-
+  
   if (error.name === 'CastError'){
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError'){
     return response.status(400).json({ error : error.message })
+  } else if (error.name === 'JsonWebTokenError'){
+    return response.status(401).json({ error: error.message })
+  } else if (error.name === 'TokenExpiredError'){
+    return response.status(401).json({ error: 'token expired'})
   }
   next(error)
+}
+
+const tokenExtractor = (request, response, next) => {
+  const authorization = request.get('authorization')
+  const token = authorization && authorization.startsWith('Bearer ')
+    ? authorization.replace('Bearer ', '')
+    : null
+  request.token = token
+  next()
+}
+
+const userExtractor = async (request, response, next) => {
+  const decodedToken = request.token
+    ? jwt.verify(request.token, process.env.SECRET)
+    : null
+  const user = decodedToken
+    ? await User.findById(decodedToken.id)
+    : null
+  request.user = user
+  next()
 }
 
 module.exports = {
   requestLogger,
   unknownEndpoint,
-  errorHandler
+  errorHandler,
+  tokenExtractor,
+  userExtractor
 }

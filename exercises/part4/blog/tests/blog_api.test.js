@@ -10,6 +10,18 @@ beforeEach(async () => {
   await Blog.insertMany(helper.initialBlogs)
 })
 
+const loginAndGetToken = async () => {
+  const userLogin = {
+    username: 'root',
+    password: 'root'
+  }
+  const response = await api
+    .post('/api/login')
+    .send(userLogin)
+  
+  return response.body.token
+}
+
 describe('when there are initiall saved blogs', () => {
   test('blogs are returned as json', async () => {
     await api.get('/api/blogs')
@@ -32,7 +44,9 @@ describe('when there are initiall saved blogs', () => {
 })
 
 describe('creating blogs', () => {
+
   test('one valid blog is created, saved, and returned', async () => {
+    const userToken = await loginAndGetToken()
     const newBlog = {
       title: "This is a test blog",
       author: "This is a test author",
@@ -42,6 +56,7 @@ describe('creating blogs', () => {
   
     await api
       .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -54,6 +69,7 @@ describe('creating blogs', () => {
   })
   
   test('missing likes defaults to 0', async () => {
+    const userToken = await loginAndGetToken()
     const newBlog = {
       title: "This is a test blog",
       author: "This is a test author",
@@ -62,6 +78,7 @@ describe('creating blogs', () => {
     expect(newBlog.likes).not.toBeDefined()
     await api
       .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -74,7 +91,8 @@ describe('creating blogs', () => {
   })
   
   test('missing properties should return 400', async () => {
-    const invalidBlogs =[
+    const userToken = await loginAndGetToken()
+    const invalidBlogs = [
       {
         author: "This is a test author",
         url: "url.test",
@@ -88,7 +106,11 @@ describe('creating blogs', () => {
     ]
   
     for (const blog of invalidBlogs) {
-      await api.post('/api/blogs').send(blog).expect(400);
+      await api
+        .post('/api/blogs')
+        .set('Authorization', 'Bearer '+ userToken)
+        .send(blog)
+        .expect(400);
     }
   })
 })
@@ -97,31 +119,58 @@ describe('creating blogs', () => {
 
 describe('deleting blogs', () => {
   test('a blog with valid id is deleted and returns 204', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogToDelete = blogsAtStart[0]
+    const userToken = await loginAndGetToken()
+    const newBlog = {
+      title: "This is a test blog",
+      author: "This is a test author",
+      url: "url.test",
+      likes: 999
+    }
+    const returnedBlog = await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
+      .send(newBlog)
     
     await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
+      .delete(`/api/blogs/${returnedBlog.body.id}`)
+      .set('Authorization', 'Bearer '+ userToken)
       .expect(204)
     
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
     const blogsAtEndIds = blogsAtEnd.map(blog => blog.id)
-    expect(blogsAtEndIds).not.toContain(blogToDelete.id)
+    expect(blogsAtEndIds).not.toContain(returnedBlog.id)
   })
 
   test('valid non existing id returns 204', async () => {
-    const invalidId = await helper.nonExistingId()
+    const userToken = await loginAndGetToken()
+    const newBlog = {
+      title: "This is a test blog",
+      author: "This is a test author",
+      url: "url.test",
+      likes: 999
+    }
+    const returnedBlog = await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
+      .send(newBlog)
+    
+    await api
+      .delete(`/api/blogs/${returnedBlog.body.id}`)
+      .set('Authorization', 'Bearer '+ userToken)
 
     await api
-      .delete(`/api/blogs/${invalidId}`)
+      .delete(`/api/blogs/${returnedBlog.body.id}`)
+      .set('Authorization', 'Bearer '+ userToken)
       .expect(204)
   })
   
   test('malformatted id returns 400', async () => {
+    const userToken = await loginAndGetToken()
     const malformattedId = '5a3d5da59070081a82a3445'
     await api
       .delete(`/api/blogs/${malformattedId}`)
+      .set('Authorization', 'Bearer '+ userToken)
       .expect(400)
       
   })
