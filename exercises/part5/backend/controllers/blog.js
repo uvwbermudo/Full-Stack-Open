@@ -11,28 +11,29 @@ blogRouter.post('/', async (request, response, next) => {
     return response.status(401).json( { error: 'token invalid' })
   }
 
-  const blogAuthor = request.user
+  const blogCreator = request.user
   const blog = new Blog({
     title,
     author,
     url,
     likes,
-    creator: blogAuthor._id
+    creator: blogCreator._id
   })
   const savedBlog = await blog.save({ runValidators: true })
-  blogAuthor.blogs = blogAuthor.blogs.concat(savedBlog._id)
-  await blogAuthor.save()
-  response.status(201).json(savedBlog)
+  const savedPopulatedBlog = await savedBlog.populate('creator', { username: 1, name: 1, _id: 1})
+  blogCreator.blogs = blogCreator.blogs.concat(savedBlog._id)
+  await blogCreator.save()
+  response.status(201).json(savedPopulatedBlog)
 
 })
 
 blogRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({}).populate('creator', { username: 1, name: 1})
+  const blogs = await Blog.find({}).populate('creator', { username: 1, name: 1, _id: 1})
   response.json(blogs)
 })
 
 blogRouter.get('/:id', async (request, response) => {
-  const blog = await Blog.findById(request.params.id)
+  const blog = await Blog.findById(request.params.id).populate('creator', { username: 1, name: 1, _id: 1})
   response.json(blog)
 })
 
@@ -56,16 +57,16 @@ blogRouter.delete('/:id', async (request, response) => {
 
 blogRouter.put('/:id', async (request, response) => {
   const body = request.body
-
   const blog = {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes
+    likes: body.likes,
+    creator: body.creator._id
   }
-
   const updatedBlog = await Blog
     .findByIdAndUpdate(request.params.id, blog, { new: true, runValidators: true, content: 'query' })
+    .populate('creator', { username: 1, name: 1, _id: 1})
   response.json(updatedBlog)
 })
 

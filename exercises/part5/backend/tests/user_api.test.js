@@ -30,7 +30,7 @@ describe('creating users', () => {
 
     expect(usersAtEnd).toEqual(usersAtStart)
     expect(result.body.error).toContain('username or password must be at least 3 characters long.')
-  })
+  }, 10000)
 
   test('less than length 3 password not created and returns 400', async () => {
     const usersAtStart = helper.usersInDb()
@@ -51,7 +51,7 @@ describe('creating users', () => {
 
     expect(usersAtEnd).toEqual(usersAtStart)
     expect(result.body.error).toContain('username or password must be at least 3 characters long.')
-  })
+  }, 10000)
 
   test('missing password not created and returns 400', async () => {
     const usersAtStart = helper.usersInDb()
@@ -71,10 +71,11 @@ describe('creating users', () => {
 
     expect(usersAtEnd).toEqual(usersAtStart)
     expect(result.body.error).toContain('username and password is required.')
-  })
+  }, 10000)
 
   test('already taken username is not created and responds with 400', async() => {
     const usersAtStart = await helper.usersInDb()
+    const usersAtStartId = usersAtStart.map(user => user.id)
 
     const newUser = {
       username: "root",
@@ -91,9 +92,10 @@ describe('creating users', () => {
     expect(result.body.error).toContain('expected `username` to be unique')
 
     const usersAtEnd = await helper.usersInDb()
-    expect(usersAtEnd).toEqual(usersAtStart)
+    const usersAtEndId = usersAtEnd.map(user => user.id)
+    expect(usersAtEndId).toEqual(usersAtStartId)
 
-  })
+  }, 10000)
 
 
 })

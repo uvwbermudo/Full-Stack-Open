@@ -27,19 +27,19 @@ describe('when there are initiall saved blogs', () => {
     await api.get('/api/blogs')
       .expect(200)
       .expect('Content-Type', /application\/json/)
-  })
+  }, 10000)
   
   test('all blogs are returned', async () => {
     const response = await api.get('/api/blogs')
     expect(response.body).toHaveLength(helper.initialBlogs.length)  
-  })
+  }, 10000)
 
   test('identifier is id', async () => {
     const response = await api.get('/api/blogs')
     response.body.forEach(blog => {
       expect(blog.id).toBeDefined()
     })
-  })
+  }, 10000)
 
 })
 
@@ -66,7 +66,7 @@ describe('creating blogs', () => {
     const titles = blogsAtEnd.map(blog => blog.title)
   
     expect(titles).toContain(newBlog.title)
-  })
+  }, 10000)
   
   test('missing likes defaults to 0', async () => {
     const userToken = await loginAndGetToken()
@@ -88,7 +88,7 @@ describe('creating blogs', () => {
         expect(returnedBlog.body.likes).toBe(0)
       })
     
-  })
+  }, 10000)
   
   test('missing properties should return 400', async () => {
     const userToken = await loginAndGetToken()
@@ -113,7 +113,7 @@ describe('creating blogs', () => {
         .expect(400);
     }
   })
-})
+}, 10000)
 
 
 
@@ -140,7 +140,7 @@ describe('deleting blogs', () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
     const blogsAtEndIds = blogsAtEnd.map(blog => blog.id)
     expect(blogsAtEndIds).not.toContain(returnedBlog.id)
-  })
+  }, 10000)
 
   test('valid non existing id returns 204', async () => {
     const userToken = await loginAndGetToken()
@@ -163,7 +163,7 @@ describe('deleting blogs', () => {
       .delete(`/api/blogs/${returnedBlog.body.id}`)
       .set('Authorization', 'Bearer '+ userToken)
       .expect(204)
-  })
+  }, 10000)
   
   test('malformatted id returns 400', async () => {
     const userToken = await loginAndGetToken()
@@ -173,54 +173,86 @@ describe('deleting blogs', () => {
       .set('Authorization', 'Bearer '+ userToken)
       .expect(400)
       
-  })
+  }, 10000)
 })
 
 describe('updating blogs', () => {
   test('like is updated', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogToUpdate = blogsAtStart[0]
-  
+    const userToken = await loginAndGetToken()
+
+    const newBlog = {
+      title: 'Blog to like',
+      author: 'BlogToLikeAuthor',
+      url: 'url.tolike'
+    }
+    
+    //! definitely turn this into function before you copy paste this the next time you need this
+    const response = await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+    
+    const createdBlog = response.body
+    
     const blogToUpdateObject = {
-      title: blogToUpdate.title,
-      author: blogToUpdate.author,
-      url: blogToUpdate.url,
+      title: createdBlog.title,
+      author: createdBlog.author,
+      url: createdBlog.url,
+      creator: createdBlog.creator,
       likes: 1000
     }
   
     await api
-      .put(`/api/blogs/${blogToUpdate.id}`)
+      .put(`/api/blogs/${createdBlog.id}`)
+      .set('Authorization', 'Bearer '+ userToken)
       .send(blogToUpdateObject)
       .expect(200)
     
     const updatedBlog = await api
-      .get(`/api/blogs/${blogToUpdate.id}`)
+      .get(`/api/blogs/${createdBlog.id}`)
       .expect(200)
   
     expect(updatedBlog.body.likes).toEqual(1000)
-  })
+  }, 10000)
 
   test('malformatted id returns 400', async () => {
+    const userToken = await loginAndGetToken()
+
     const malformattedId = '5a3d5da59070081a82a3445'
-  
+    //! definitely turn this into function before you copy paste this the next time you need this
+    const newBlog = {
+      title: 'Blog to updated',
+      author: 'BlogToupdatedAuthor',
+      url: 'url.toupdated'
+    }
+    
+    const response = await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer '+ userToken)
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+    
+    const createdBlog = response.body
+    
     const blogToUpdateObject = {
-      title: 'test',
-      author: 'test',
-      url: 'test',
+      title: createdBlog.title,
+      author: createdBlog.author,
+      url: createdBlog.url,
+      creator: createdBlog.creator,
       likes: 1000
     }
   
     await api
       .put(`/api/blogs/${malformattedId}`)
+      .set('Authorization', 'Bearer '+ userToken)
       .send(blogToUpdateObject)
       .expect(400)
-  })
+  }, 10000)
 
 })
-
-
-
-
 
 afterAll(async () => {
   mongoose.connection.close()

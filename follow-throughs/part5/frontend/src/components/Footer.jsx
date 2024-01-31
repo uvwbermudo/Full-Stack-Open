@@ -13,7 +13,7 @@ const Footer = () => {
       <div>Made by UVWB, Full Stack Open Student</div>
     </div>
   )
-  
+
 }
 
 export default Footer
