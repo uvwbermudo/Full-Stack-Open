@@ -52,6 +52,17 @@ const App = () => {
     window.localStorage.removeItem('loggedNoteAppUser')
   }
 
+  const handleLike = async (blog) => {
+    const changedBlog = { ...blog, likes: blog.likes + 1 }
+    try{
+      await blogService.update(blog.id, changedBlog)
+      triggerBlogUpdate()
+    } catch (exception) {
+      notifyUser(exception.response.data.error, 'error')
+    }
+
+  }
+
   const createBlog = async (newBlog) => {
     try {
       const returnedBlog = await blogService.create(newBlog)
@@ -100,6 +111,7 @@ const App = () => {
           triggerBlogUpdate={triggerBlogUpdate}
           notifyUser={notifyUser}
           user={user}
+          handleLike={handleLike}
         />
       )}
     </div>
