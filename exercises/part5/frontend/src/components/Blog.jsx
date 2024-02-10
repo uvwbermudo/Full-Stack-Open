@@ -1,4 +1,4 @@
-import { useState } from 'react'
+  import { useState } from 'react'
 import blogService from '../services/blogs'
 import PropTypes from 'prop-types'
 
@@ -41,10 +41,10 @@ const Blog = (props) => {
       <button onClick={toggleVisibility} style={showWhenVisible}>Hide</button>
       <div style={showWhenVisible}>
         <div className='blogUrl'>URL: {blog.url}</div>
-        <div className='blogLikes'>Likes: {blog.likes}
-          <button onClick={() => handleLike(blog)}>Like</button>
+        <div className='blogLikes'>Likes: <span className='likeCount'>{blog.likes}</span>
+          <button className='likeButton' onClick={() => handleLike(blog)}>Like</button>
         </div>
-        <div>{blog.creator.name}</div>
+        <div className='blogCreator'>{blog.creator.name}</div>
         {blog.creator.username === user.username
           ? (<button onClick={() => handleDelete(blog)}>Delete this blog</button>)
           : null

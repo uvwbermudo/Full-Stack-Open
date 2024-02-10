@@ -13,7 +13,7 @@ const Login = (props) => {
 
     try {
       const user = await loginService.login({ username, password })
-      window.localStorage.setItem('loggedNoteAppUser', JSON.stringify(user))
+      window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
       blogService.setToken(user.token)
       setUser(user)
       setUsername('')
@@ -24,10 +24,11 @@ const Login = (props) => {
   }
 
   return (
-    <form onSubmit={handleLogin}>
+    <form id="loginForm" onSubmit={handleLogin}>
       <div>
         username
         <input
+          id="username"
           type="text"
           value={username}
           name="username"
@@ -37,13 +38,14 @@ const Login = (props) => {
       <div>
         password
         <input
+          id="password"
           type="password"
           value={password}
           name="password"
           onChange={({ target }) => setPassword(target.value)}
         />
       </div>
-      <button type="submit">login</button>
+      <button id="loginButton" type="submit">login</button>
     </form>
   )
 }

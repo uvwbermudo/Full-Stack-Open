@@ -19,6 +19,7 @@ const AddBlogForm = (props) => {
       <div>
         title
         <input
+          id="blogTitle"
           type="text"
           value={title}
           name="title"
@@ -28,6 +29,7 @@ const AddBlogForm = (props) => {
       <div>
         url
         <input
+          id="blogUrl"
           type="text"
           value={url}
           name="url"
@@ -37,6 +39,7 @@ const AddBlogForm = (props) => {
       <div>
         author
         <input
+          id="blogAuthor"
           type="text"
           value={author}
           name="author"
@@ -44,7 +47,7 @@ const AddBlogForm = (props) => {
         />
       </div>
 
-      <button type="submit">Create</button>
+      <button id="blogSubmit" type="submit">Create</button>
     </form>
   )
 }

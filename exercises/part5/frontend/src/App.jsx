@@ -20,7 +20,7 @@ const App = () => {
   }, [updatedBlogsTrigger])
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
     if (loggedUserJSON){
       const loggedUser = JSON.parse(loggedUserJSON)
       setUser(loggedUser)
@@ -49,7 +49,7 @@ const App = () => {
   const handleLogout = () => {
     setUser(null)
     blogService.setToken(null)
-    window.localStorage.removeItem('loggedNoteAppUser')
+    window.localStorage.removeItem('loggedBlogAppUser')
   }
 
   const handleLike = async (blog) => {
